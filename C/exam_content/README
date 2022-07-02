@@ -1,0 +1,22 @@
+//1) Schema di tutte le topologie
+	1.1) 1 Padre N figli, padre legge figlio scrive, e viceversa
+	1.2) 1 Padre N figli, padre scrive e legge, e figlio legge e scrive (2N pipe) --> 10 sett 2k14
+	1.3) 1 Padre N figli, 1 figlio attiva la pipeline e manda in avanti tutto fino al padre che legge dal figlio N-1
+	1.4) 1 Padre N figli, schema ad anello, il padre attiva la pipeline e legge anche dal figlio N-1
+	1.5) 1 Padre N figli, la comunicazione va al contrario, il padre attiva la pipeline e il primo figlio stampa le info
+	1.6) 1 Padre N figli 1 nipote
+	1.7) 1 Padre N figli N nipoti (creo dinamicamente l'array di pipe nel figlio per la comunicazione Figlio-Nipote)
+	1.8) 1 Padre N figli 1 nipote o N, figli e nipote comunicano con 2N pipe (il figlio scrive il nipote legge, il nipote 		 	 scrive il figlio legge)		
+	1.9) 1 Padre N figli 1 nipote o N, comunicazione fra Padre-Nipote (Creo le pipe per la comunicazione Padre-Nipote nel main)
+
+//2) Schema generale di un file main.c, partendo dal controllo degli argomenti, all'uso dell'atoi, al controllo di un singolo 	   carattere (strlen e poi passare argv[1][0]), ai famosi 2N caratteri intervallati da lunghezza, agli exit con 0xFF
+
+//3) Uso specifico della execlp e delle altre exec, quando usare dup() e quando chiudere stdin e stdout, ridirezione stderror, e 	   fare le close giuste sia da parte dei figli che da parte dei nipoti, dopo execlp interpretazione giusta dell'output con 		   conseguente lettura da pipe (tipo carattere per carattere, aggiungere carattere terminatore ecc..)
+
+//4) Ripassare principali comandi UNIX (da scheda)
+
+//5) Modalità di apertura dei file, quando si scrive, lseek -1L --> 12 sett 2k18
+
+//6) Come passare gli array e i vari dati
+
+7) Ripassare tutti i parziali, più es fatti da lei in aula, più es stronzi

@@ -1,0 +1,219 @@
+1.1) 1 Padre N figli, padre legge figlio scrive, e viceversa
+
+	int i,j;
+	//Generazione figli
+	for(i=0; i<N; i++)
+	{
+		pid[i]=fork();
+		if(pid[i]<0)
+		{
+			fallimento;
+		}
+		if(pid[i]>0)
+		{
+			for(j=0; j<N; j++)
+			{
+				close(piped[j][0]);
+				if(i != j)
+					close(piped[j][1]);
+			}
+		}
+	}
+
+	//Padre
+	for(i=0; i<N; i++)
+	{
+		close(piped[i][1]);
+	}
+
+1.2) 1 Padre N figli, padre scrive e legge, e figlio legge e scrive (2N pipe)
+
+	int i,j;
+	//Generazione figli
+	for(i=0; i<N; i++)
+	{
+		pid[i]=fork();
+		if(pid[i]<0)
+		{
+			fallimento;
+		}
+		if(pid[i]>0)
+		{
+			for(j=0; j<N; j++)
+			{
+				close(pf[j][1]);
+				close(fp[j][0]);
+				if(i != j)
+				{
+					close(pf[j][0]);
+					close(fp[j][1]);
+				}
+			}
+
+		}
+	}
+
+	//padre
+	//Chiudo le pipe che non uso
+	for(i=0; i<N; i++)
+	{
+		close(fp[i][1]);
+		close(pf[i][0]);
+	}
+
+1.3) 1 Padre N figli, 1 figlio attiva la pipeline e manda in avanti tutto fino al padre che legge dal figlio N-1
+
+	int i,j;
+	//Generazione figli
+	for(i=0; i<N; i++)
+	{
+		pid[i]=fork();
+		if(pid[i]<0)
+		{
+			fallimento;
+		}
+		if(pid[i]>0)
+		{
+			for(j=0; j<N; j++)
+			{
+				if(i != j)
+					close(piped[j][1]);
+				if(i==0)
+					close(piped[j][0]);
+				else
+				{
+					if(i!=j+1)
+						close(piped[j][0]);
+				}
+
+				//Differenziare caso i==0 e non
+
+			}
+
+		}
+	}
+	//Padre
+	for(i=0; i<N; i++)
+	{
+		close(piped[i][1]);
+		if(i!=N-1)
+			close(piped[i][0]);
+	}
+	//ricordarsi che padre legge sempre da N-1
+
+1.4) 1 Padre N figli, schema ad anello, il padre attiva la pipeline e legge anche dal figlio N-1
+
+	int i,j;
+	//Generazione figli
+	for(i=0; i<N; i++)
+	{
+		pid[i]=fork();
+		if(pid[i]<0)
+		{
+			fallimento;
+		}
+		if(pid[i]>0)
+		{
+			//Chiudo le pipe che non mi servono..
+			//In lettura chiudo tutto tranne la mia
+			//In scrittura chiudo tutto tranne la prossima
+			for(j=0; j<nFigli+1; j++)
+			{
+				if(j != i+1)
+					close(p[j][1]);
+				if(j != i)
+					close(p[j][0]);
+			}
+
+		}
+	}
+	//Padre
+	//Chiudo le pipe che non mi servono..
+	//In scrittura chiudo tutte le pipe tranne quella del prossimo figlio dove voglio scrivere..
+	//In lettura chiudo tutte tranne l'ultima.. perchè da li poi il padre deve leggere ciò
+	//	che gli arriva poi dall'ultimo figlio
+	for(i=0; i<nFigli+1; i++)
+	{
+		if(i!=0)
+			close(p[i][1]);
+		if(i!=nFigli)
+			close(p[i][0]);
+	}
+	//Padre scrive in [0][1] legge da [nFigli][0]
+
+1.5) 1 Padre N figli, la comunicazione va al contrario, il padre attiva la pipeline e il primo figlio stampa le info
+
+	int i,j;
+	//Generazione figli
+	for(i=0; i<N; i++)
+	{
+		pid[i]=fork();
+		if(pid[i]<0)
+		{
+			fallimento;
+		}
+		if(pid[i]>0)
+		{
+			//Chiudo le pipe che non uso..
+			//In lettura chiudo tutto tranne la prossima
+			//In scrittura chiudo tutto tranne la prossima
+			for(j=0; j<nFigli; j++)
+			{
+				if((j != i-1) && (i != 0))
+					close(p[j][1]);
+				if(j != i)
+					close(p[j][0]);
+			}
+			
+		}
+	}
+
+	//Padre
+	//Chiudo le pipe che non uso..
+	//Il padre ha solo il compito di leggere, quindi in lettura chiudo tutte le pipe
+	//Per quanto riguarda la scrittura chiudo tutto tranne quella al prossimo figlio
+	// siccome però è inversa, parto dalla fine..
+	for(i=0; i<nFigli; i++)
+	{
+		if(i!=nFigli-1)
+			close(p[i][1]);
+		close(p[i][0]);
+	}
+	//Il padre scrive al figlio di indice N-1
+
+1.6) 1 Padre N figli 1 nipote
+	//Uguale a padre figlio, ricordarsi però di chiudere la pipe tra Padre-Figlio nel nipote
+	//Poi una volta tornato nel figlio, chiudo opportunamente la comunicazione Figlio-Nipote
+
+1.7) 1 Padre N figli N nipoti (creo dinamicamente l'array di pipe nel figlio per la comunicazione Figlio-Nipote)
+	//Fino a Padre-Figlio tutto uguale
+	//Nel figlio (nel suo ciclo FOR) creare dinamicamente tutte le volte l'array di pipe
+	//Una volta che sei nel nipote (ricordarsi ovviamente di chiudere la pipe rimasta aperta tra Padre-Figlio)
+	//Fare poi nel nipote una gestione delle pipe nei confronti del figlio (come facevo con Padre-Figlio)
+	//E ovviamente anche nel figlio gestire le pipe con il nipote (apertura chiusura ecc)
+
+1.8) 1 Padre N figli 1 nipote o N, figli e nipote comunicano con 2N pipe (il figlio scrive il nipote legge, il nipote 		 	  scrive il figlio legge)
+	 //Tra Padre-Figlio faccio normalmente l'array di pipe per la comunicazione (chiudo e apro il necessario)
+	 //Dentro al figlio creo le pipe di comunicazione tra Figlio-Nipote
+	 //Creo il nipote
+	 //Nel nipote chiudo sempre la pipe di comunicazione rimasta aperta fra Padre-Figlio
+	 //Nel nipote chiudo i lati della pipe che non uso
+	 //Torno nel figlio chiudo, chiudo le pipe nei confronti del nipote che non uso
+
+
+1.9) 1 Padre N figli 1 nipote o N, comunicazione fra Padre-Nipote (Creo le pipe per la comunicazione Padre-Nipote nel main)
+	 //Nel main creo normalmente l'array di pipe per la comunicazione Padre-Figlio e sempre li creo l'array di pipe Padre-Nipote
+	 //Nel figlio tocco(chiusura e apertura) solo le pipe relative a Padre-Figlio
+	 //Nel nipote (chiudo sempre la pipe rimasta aperta tra Padre-Figlio) e tocco(chiusura e apertura) le pipe relative a Padre-Nipote
+	 //Nel figlio chiudo tutte le pipe usate dal nipote 
+	 //Nel padre normalmente gestisco il rapporto Padre-Figlio e Padre-Nipote
+
+
+
+
+
+
+
+
+
+
